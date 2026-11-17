@@ -1,0 +1,14 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Prince of Persia: The Sands of Time",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/sot/port/build/Debug/pop_sot.exe",
+      "args": ["--width", "569"],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "Build Debug"
+    }
+  ]
+}

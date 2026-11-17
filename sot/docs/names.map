@@ -1,0 +1,14 @@
+# Rename map for Prince of Persia: The Sands of Time (Series 60 build), read by tools/renamer/ChRenamer.java.
+# Lines: class <old> <new> | field <Class.old> <new> | method <Class.old(Params)> <new>, with
+# simple class names (the pop2 package is implied). Rename only after inspecting call sites.
+
+# Actor base: position, animation, collision boxes, AI state (Prince extends it).
+class a Actor
+# The prince: player controls, sword, sand powers.
+class d Prince
+# The level: tile maps, actor lists, camera, triggers (all static).
+class b Level
+# Sprite bank: image strips, modules, frames, animations.
+class c Sprite
+# The canvas: main loop, states, menus, rendering, input, sound, save.
+class e Game

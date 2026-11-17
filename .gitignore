@@ -1,0 +1,21 @@
+# Original game, extracted/decoded data, screenshots and analysis artifacts
+*.jar
+*.jad
+tools/midp-stubs/
+sot/extracted/
+sot/analysis/
+*.png
+*.bmp
+*.ppm
+*.log
+__pycache__/
+*.pyc
+.venv/
+sot/port/build*/
+sot/port/dist/
+CMakeUserPresets.json
+.vs/
+
+# Local native game progress
+*.sav
+*.sav.tmp
