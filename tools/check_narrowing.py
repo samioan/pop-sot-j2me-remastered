@@ -60,7 +60,8 @@ def methods(javap: Path, classpath: Path, cls: str):
             if "/" not in owner:
                 result[(name, desc)][("raw", owner, m.group(2), m.group(3))] += 1
     m = re.search(r"class [\w.$]+ extends ([\w.$]+)", out)
-    superclass = m.group(1).rsplit(".", 1)[-1] if m and m.group(1).startswith(PACKAGE + ".") else None
+    in_game = m and (m.group(1).startswith(PACKAGE + ".") if PACKAGE else "." not in m.group(1))
+    superclass = m.group(1).rsplit(".", 1)[-1] if in_game else None
     return result, superclass
 
 

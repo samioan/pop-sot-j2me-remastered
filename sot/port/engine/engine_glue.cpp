@@ -112,6 +112,8 @@ static void paintOnce() {
     PrinceSOT::c->paint(g_graphics);
 }
 
+int g_recordedTicks = 0;   // consecutive recorded level frames (no in-betweens across a cut)
+
 void tick() {
     if (!g_started || g_quit) return;
     ensureScreen();
@@ -147,12 +149,17 @@ void tick() {
         hostLog("uncaught: " + jutf8(e.ex->toString()));
     }
     g_clock += iterationMs();
-    if (recording) recorderFinish();
-    else recorderDrop();
+    if (recording) {
+        recorderFinish();
+        ++g_recordedTicks;
+    } else {
+        recorderDrop();
+        g_recordedTicks = 0;
+    }
 }
 
 bool renderInterpolated(double alpha) {
-    if (!g_started || !g_options.interpolation || !recorderHasFrame() || g_screen == nullptr) return false;
+    if (!g_started || !g_options.interpolation || !recorderHasFrame() || g_screen == nullptr || g_recordedTicks < 2) return false;
     if (g_interp == nullptr || g_interp->width != g_screen->width) g_interp = Image::createImage(g_screen->width, g_screen->height);
     Ref<Graphics> g = g_interp->getGraphics();
     if (!recorderReplay(alpha, *g.get())) return false;

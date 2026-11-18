@@ -193,6 +193,7 @@ struct DrawOp {
     std::u16string text;
     Ref<Font> font;
     bool alpha;
+    bool wrap = false;          // a blit from the tile ring buffer (image is the tick's snapshot of it)
 };
 struct Layer {
     int kind;                   // 0 screen, 1 world, 2 tiles, 3 actor
@@ -206,7 +207,12 @@ struct Recording {
     std::vector<DrawOp> ops;
     std::vector<Layer> layers;
     bool valid = false;
+    Ref<Image> wrapCopy;        // the tile ring buffer as this tick first blitted from it
+    bool wrapCopied = false;
 };
+Image* g_wrapImage = nullptr;
+jint g_wrapW = 0, g_wrapH = 0;
+
 struct Recorder {
     Graphics* target = nullptr;
     bool replaying = false;
@@ -258,6 +264,24 @@ void recordOp(const Graphics& g, OpKind kind, jint a, jint b, jint c, jint d, ji
 void recordImageOp(const Graphics& g, const Ref<Image>& image, jint sx, jint sy, jint w, jint h, jint transform, jint dx, jint dy) {
     DrawOp& op = newOp(g, OpImage);
     op.image = image;
+    if (image.get() == g_wrapImage) {
+        // The game may redraw the buffer later in the same tick (a level loading as a cutscene ends):
+        // replay from the contents this tick's frame was drawn from.
+        Recording& w = g_rec.work;
+        if (!w.wrapCopied) {
+            if (!w.wrapCopy || w.wrapCopy->width != image->width || w.wrapCopy->height != image->height) {
+                w.wrapCopy = jnew<Image>();
+                w.wrapCopy->width = image->width;
+                w.wrapCopy->height = image->height;
+                w.wrapCopy->mutableImage = true;
+                w.wrapCopy->hasAlpha = image->hasAlpha;
+            }
+            w.wrapCopy->pixels = image->pixels;
+            w.wrapCopied = true;
+        }
+        op.image = w.wrapCopy;
+        op.wrap = true;
+    }
     op.sx = sx; op.sy = sy; op.transform = transform;
     op.a = dx; op.b = dy; op.c = w; op.d = h; op.e = op.f = 0;
 }
@@ -278,10 +302,6 @@ void recordTextOp(const Graphics& g, const std::u16string& text, jint x, jint y)
 }
 } // namespace
 
-namespace {
-Image* g_wrapImage = nullptr;
-jint g_wrapW = 0, g_wrapH = 0;
-}
 void PortNative::tileBuffer(const Ref<Image>& image, jint w, jint h) {
     g_wrapImage = image.get();
     g_wrapW = w;
@@ -303,6 +323,7 @@ void recorderStart(Graphics* target) {
     g_rec.work.ops.clear();
     g_rec.work.layers.clear();
     g_rec.work.valid = false;
+    g_rec.work.wrapCopied = false;
 }
 void recorderFinish() {
     if (!g_rec.target) return;
@@ -363,7 +384,7 @@ bool recorderReplay(double alpha, Graphics& out) {
             case OpDrawArc: out.drawArc(op.a + dx, op.b + dy, op.c, op.d, op.e, op.f); break;
             case OpFillTriangle: out.fillTriangle(op.a + dx, op.b + dy, op.c + dx, op.d + dy, op.e + dx, op.f + dy); break;
             case OpImage:
-                if (op.image.get() == g_wrapImage && (dx || dy)) {
+                if (op.wrap && (dx || dy)) {
                     out.setClip(op.clipX, op.clipY, op.clipW, op.clipH);
                     for (jint oy = -g_wrapH; oy <= g_wrapH; oy += g_wrapH)
                         for (jint ox = -g_wrapW; ox <= g_wrapW; ox += g_wrapW)
