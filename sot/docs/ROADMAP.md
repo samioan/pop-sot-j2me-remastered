@@ -4,6 +4,8 @@ The current remaining-work list. Update it in place when work lands.
 
 ## Target and current status
 
+- **v1.0.0** is the first release (GitHub `samioan/pop-sot-j2me-remastered`).
+
 - **Prince of Persia: The Sands of Time, Nokia Series 60 build (176x208, MIDlet 1.1.0)**,
   `roms/PrinceOfPersia-TheSandsOfTime.jar`, SHA-256
   `40e7115a32e9e584106bc6565ed78cd6af189b41a426f5d61f53bbf8d0ac3e9f`. Six classes in package
@@ -43,7 +45,8 @@ The current remaining-work list. Update it in place when work lands.
 - [ ] Decide whether the game's "Controls" layouts (Game.h 1..4, other Nokia keypads) should be
   hidden on the desktop; they remap the phone keys the host sends.
 - [ ] Interpolation refinements: sub-pixel motion, per-effect layers.
-- [ ] A published release; the launcher's self-update has not been exercised against one.
+- [ ] The launcher's self-update exercised end to end (v1.0.0 is the first release; the update
+  path runs once a later release exists).
 - [ ] A scripted, replayable playthrough checked against the original.
 
 ## Verification

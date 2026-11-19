@@ -95,7 +95,7 @@ on a jump or sword press only on the tick it arrives. The host leaves that alone
 it sends: of two opposite directions the newest wins (the older is released to the game and
 pressed again if still held when the newer ends), and the stick has a radial deadzone with
 hysteresis (engage at the deadzone, let go at 60% of it; a flickering stick otherwise double-taps
-into the sand dash) and a wider Left/Right sector (Up/Down from 40 degrees above horizontal, held
+into the roll) and a wider Left/Right sector (Up/Down from 40 degrees above horizontal, held
 down to 30). The INPUT BUFFER option (on by default, keyboard page; `input_buffer` in the ini)
 runs `PortConfig.inputTick` at the start of `Game.e()`: a jump or sword press still held that has
 not started a move is queued again in `Game.ax` for up to 3 ticks while the prince stands (or, for

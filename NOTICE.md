@@ -17,8 +17,10 @@ Win32 host, launcher and VS discovery were adapted from the user's own sibling w
 that code is inferred or assigned here. Vineflower is Apache-2.0 software; MIDP/CLDC/Nokia stub
 binaries retain their respective owners' terms.
 
-The launcher's banner and icon (sot/port/launcher/assets) are original artwork drawn by
-tools/make_art.py; they contain nothing from the game or its publishers.
+The launcher's banner and icon (sot/port/launcher/assets) and .github/social-preview.jpg are made
+by tools/make_art.py (and a fitted copy for the preview) from "Prince of Persia: Remastered" key art
+supplied by the project owner. It shows the Prince of Persia logo and character, which belong to
+Ubisoft; it is used to identify the game, as on the project page, not as a claim to it.
 
 The native build/package contains the launcher, the game executable, its checker, a readme and
 this notice only. Players' game data stays separate: the launcher copies the player's own JAR into

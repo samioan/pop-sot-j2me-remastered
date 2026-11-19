@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.20)
-project(pop_sot VERSION 0.1.0 LANGUAGES CXX)
+project(pop_sot VERSION 1.0.0 LANGUAGES CXX)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -11,9 +11,9 @@ endif()
 # `POP_VERSION` is what the launcher prints in its corner. A local build leaves it at "-dev", which
 # also turns the launcher's self-update off (launcher/updater.h); the release workflow sets it from
 # the git tag (.github/workflows/release.yml). The owner/repo/prefix say where updates come from.
-set(POP_VERSION "0.1.0-dev" CACHE STRING "Version string shown by the launcher")
+set(POP_VERSION "1.0.0-dev" CACHE STRING "Version string shown by the launcher")
 set(POP_UPDATE_OWNER "samioan" CACHE STRING "GitHub owner to check for updates")
-set(POP_UPDATE_REPO "pop-sot-remastered" CACHE STRING "GitHub repo to check for updates")
+set(POP_UPDATE_REPO "pop-sot-j2me-remastered" CACHE STRING "GitHub repo to check for updates")
 set(POP_UPDATE_TAG_PREFIX "v" CACHE STRING "Release tag prefix")
 
 # The reference Java translated to C++ (gen/, written by tools/gen_port.py) on a small Java/MIDP

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Draw the launcher's banner and icon: original artwork, generated, no game data.
+"""Make the launcher's banner and icon: drawn from scratch (default) or from a supplied picture (--image).
 
 The launcher (sot/port/launcher) embeds a banner JPEG and an .ico. They are painted here from
 scratch with Pillow: a desert palace at dusk under a large moon, dunes, drifting sand, and an

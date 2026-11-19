@@ -809,7 +809,7 @@ void pollGamepad() {
     if (st.lt > 60) buttons |= PadLT;
     if (st.rt > 60) buttons |= PadRT;
     // The stick engages past the deadzone and lets go only below 60% of it, so a stick resting near
-    // the edge does not flicker (two quick Left/Right presses are the game's sand dash). Left/Right
+    // the edge does not flicker (two quick Left/Right presses are the game's roll). Left/Right
     // own the wider sector, so running with the stick tilted a little up does not jump: Up/Down
     // engage beyond 40 degrees from horizontal and stay down to 30; Left/Right stay up to 72 degrees.
     const double dead = 32767.0 * g_settings.deadzone / 100.0;

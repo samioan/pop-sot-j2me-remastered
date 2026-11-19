@@ -2,7 +2,7 @@ name: Release
 
 # Push a tag, get a downloadable release that every installed launcher offers as an update:
 #
-#     git tag v0.1.0 && git push origin v0.1.0
+#     git tag v1.0.0 && git push origin v1.0.0
 #
 # The tag is the version: it is compiled into the launcher (POP_VERSION, shown in its corner and
 # compared with the newest release by sot/port/launcher/update_check.cpp), so nothing needs bumping
@@ -16,7 +16,7 @@ on:
   workflow_dispatch:
     inputs:
       tag:
-        description: 'Existing tag to build and release (e.g. v0.1.0)'
+        description: 'Existing tag to build and release (e.g. v1.0.0)'
         required: true
 
 permissions:
@@ -39,7 +39,7 @@ jobs:
         run: |
           $tag = if ($env:INPUT_TAG) { $env:INPUT_TAG } else { $env:GITHUB_REF_NAME }
           if ($tag -notmatch '^v(\d+\.\d+\.\d+.*)$') {
-            throw "tag '$tag' is not a version tag -- expected something like v0.1.0"
+            throw "tag '$tag' is not a version tag -- expected something like v1.0.0"
           }
           $version = $Matches[1]
           "tag=$tag" >> $env:GITHUB_OUTPUT
