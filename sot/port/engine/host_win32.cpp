@@ -127,6 +127,7 @@ struct Settings {
     bool mute = false;
     bool showFps = false;
     bool pauseUnfocused = true; // like the phone: losing focus suspends the game and opens its pause menu
+    bool inputBuffer = true;  // offer a held jump/sword press again for a few ticks (PortConfig.inputTick)
     int windowScale = 4;
     std::wstring jar;         // last imported JAR
     std::vector<int> keys[ActCount];
@@ -223,6 +224,7 @@ bool loadSettings(const std::wstring& path, Settings& s) {
         else if (key == "mute") s.mute = std::atoi(value.c_str()) != 0;
         else if (key == "show_fps") s.showFps = std::atoi(value.c_str()) != 0;
         else if (key == "pause_on_focus_loss") s.pauseUnfocused = std::atoi(value.c_str()) != 0;
+        else if (key == "input_buffer") s.inputBuffer = std::atoi(value.c_str()) != 0;
         else if (key == "window_scale") s.windowScale = std::clamp(std::atoi(value.c_str()), 1, 8);
         else if (key == "jar") s.jar = widen(value);
     }
@@ -242,6 +244,9 @@ bool saveSettings(const std::wstring& path, const Settings& s) {
         << "\nsmooth=" << (s.smooth ? 1 : 0) << "\nwindow_scale=" << s.windowScale << "\nshow_fps=" << (s.showFps ? 1 : 0) << "\n";
     out << "\n[audio]\nvolume=" << s.volume << "\nmute=" << (s.mute ? 1 : 0) << "\n";
     out << "\n[game]\npause_on_focus_loss=" << (s.pauseUnfocused ? 1 : 0) << "\n";
+    out << "; input_buffer: a jump or sword press held while the prince is busy (landing, starting to run)\n";
+    out << ";               still counts for up to 3 ticks once he can act. 0 = original timing.\n";
+    out << "input_buffer=" << (s.inputBuffer ? 1 : 0) << "\n";
     if (!s.jar.empty()) out << "jar=" << narrow(s.jar) << "\n";
     out << "\n[keyboard]\n; Comma separated keys: letters, digits, LEFT RIGHT UP DOWN SPACE ENTER ESC TAB BACKSPACE SHIFT CTRL ALT F1..F12 NUMPAD0..9\n";
     out << "; Digits 0-9 and numpad always act as the phone keypad too (numpad * and / are the * and # keys).\n";
@@ -449,7 +454,7 @@ int hostSettingCount(int page) {
     switch (page) {
         case 0: return 8;
         case 1: return 2;
-        case 2: return ActCount + 1;
+        case 2: return ActCount + 2;
         case 3: return (ActCount - ActJump) + 2;
         default: return 0;
     }
@@ -458,7 +463,7 @@ std::string hostSettingName(int page, int index) {
     static const char* const display[] = {"WIDTH", "FRAME RATE", "SMOOTH MOTION", "FULLSCREEN", "WHOLE PIXELS", "SOFT SCALING", "FPS COUNTER", "PAUSE IN BACKGROUND"};
     if (page == 0 && index >= 0 && index < 8) return display[index];
     if (page == 1) return index == 0 ? "MUSIC VOLUME" : "MUTE";
-    if (page == 2) return index < ActCount ? kActionLabels[index] : "RESET KEYS";
+    if (page == 2) return index < ActCount ? kActionLabels[index] : index == ActCount ? "INPUT BUFFER" : "RESET KEYS";
     if (page == 3) {
         const int actions = ActCount - ActJump;
         if (index < actions) return kActionLabels[ActJump + index];
@@ -488,6 +493,7 @@ std::string hostSettingValue(int page, int index) {
         for (int vk : g_settings.keys[index]) { if (!s.empty()) s += " "; s += keyName(vk); }
         return s.empty() ? "-" : s;
     }
+    if (page == 2 && index == ActCount) return onOff(g_settings.inputBuffer);
     if (page == 3) {
         const int actions = ActCount - ActJump;
         if (index < actions) {
@@ -520,6 +526,9 @@ void hostSettingChange(int page, int index, int direction) {
     } else if (page == 2) {
         if (index < ActCount) {
             if (direction == 0) { g_capture.active = true; g_capture.page = 2; g_capture.action = index; }
+        } else if (index == ActCount) {
+            g_settings.inputBuffer = !g_settings.inputBuffer;
+            reconfigure();
         } else if (direction == 0) {
             Settings defaults;
             defaultBindings(defaults);
@@ -644,21 +653,48 @@ bool locateData(const std::wstring& explicitData, const std::wstring& explicitJa
 // ---------------------------------------------------------------- input
 
 std::map<int, int> g_codeHolds;       // MIDP key code -> number of physical sources holding it
+std::map<int, bool> g_codeDown;       // MIDP key code -> the game was told it is down
 std::map<int, int> g_keySent;         // virtual key -> MIDP code sent on press
 std::map<int, int> g_padSent;         // pad source id -> MIDP code sent on press
 
+// The game serves Left before Right and Down before Up when both are held, so on a keyboard a
+// reversal waits for the old key to come up. Here the newest of two opposite directions wins: the
+// older one is released to the game, and pressed again if it is still held when the newer one ends.
+int oppositeCode(int code) {
+    switch (code) {
+        case popapi::KeyLeft: return popapi::KeyRight;
+        case popapi::KeyRight: return popapi::KeyLeft;
+        case popapi::KeyUp: return popapi::KeyDown;
+        case popapi::KeyDown: return popapi::KeyUp;
+        default: return 0;
+    }
+}
+void sendDown(int code, bool down) {
+    bool& sent = g_codeDown[code];
+    if (sent == down) return;
+    sent = down;
+    if (down) popapi::keyPressed(code);
+    else popapi::keyReleased(code);
+}
 void pressCode(int code) {
     if (code == 0) return;
-    if (g_codeHolds[code]++ == 0) popapi::keyPressed(code);
+    if (g_codeHolds[code]++ != 0) return;
+    if (int other = oppositeCode(code)) sendDown(other, false);
+    sendDown(code, true);
 }
 void releaseCode(int code) {
     if (code == 0) return;
     auto it = g_codeHolds.find(code);
     if (it == g_codeHolds.end() || it->second == 0) return;
-    if (--it->second == 0) popapi::keyReleased(code);
+    if (--it->second != 0) return;
+    const bool wasDown = g_codeDown[code];
+    sendDown(code, false);
+    const int other = oppositeCode(code);
+    if (wasDown && other && g_codeHolds[other] > 0) sendDown(other, true);
 }
 void releaseAll() {
-    for (auto& kv : g_codeHolds) if (kv.second > 0) popapi::keyReleased(kv.first);
+    for (auto& kv : g_codeDown) if (kv.second) popapi::keyReleased(kv.first);
+    g_codeDown.clear();
     g_codeHolds.clear();
     g_keySent.clear();
     g_padSent.clear();
@@ -753,6 +789,8 @@ void padSource(int id, bool down, Action a) {
     }
 }
 
+bool g_stickOn = false, g_stickH = false, g_stickV = false;
+
 void pollGamepad() {
     if (!g_xinput) return;
     if (!g_padConnected && now() < g_padRetry) return; // probing empty slots is slow; retry once a second
@@ -770,9 +808,18 @@ void pollGamepad() {
     unsigned buttons = st.buttons;
     if (st.lt > 60) buttons |= PadLT;
     if (st.rt > 60) buttons |= PadRT;
-    const int dead = 32767 * g_settings.deadzone / 100;
-    const bool left = (st.buttons & 0x0004) || st.lx < -dead, right = (st.buttons & 0x0008) || st.lx > dead;
-    const bool up = (st.buttons & 0x0001) || st.ly > dead, down = (st.buttons & 0x0002) || st.ly < -dead;
+    // The stick engages past the deadzone and lets go only below 60% of it, so a stick resting near
+    // the edge does not flicker (two quick Left/Right presses are the game's sand dash). Left/Right
+    // own the wider sector, so running with the stick tilted a little up does not jump: Up/Down
+    // engage beyond 40 degrees from horizontal and stay down to 30; Left/Right stay up to 72 degrees.
+    const double dead = 32767.0 * g_settings.deadzone / 100.0;
+    const double sx = st.lx, sy = st.ly, ax = std::fabs(sx), ay = std::fabs(sy);
+    const double mag = std::sqrt(sx * sx + sy * sy);
+    g_stickOn = mag > (g_stickOn ? dead * 0.6 : dead);
+    g_stickH = g_stickOn && ay <= ax * (g_stickH ? 3.08 : 2.414);
+    g_stickV = g_stickOn && ay >= ax * (g_stickV ? 0.577 : 0.839);
+    const bool left = (st.buttons & 0x0004) || (g_stickH && sx < 0), right = (st.buttons & 0x0008) || (g_stickH && sx > 0);
+    const bool up = (st.buttons & 0x0001) || (g_stickV && sy > 0), down = (st.buttons & 0x0002) || (g_stickV && sy < 0);
     if (g_capture.active && g_capture.page == 3) {
         const unsigned fresh = buttons & ~g_padPrev;
         for (const auto& b : kPadNames) {
@@ -829,6 +876,7 @@ void applyLogicalWidth() {
         popapi::Options o;
         o.screenWidth = w;
         o.interpolation = g_settings.interpolation;
+        o.inputBuffer = g_settings.inputBuffer;
         popapi::configure(o);
     }
 }
@@ -837,6 +885,7 @@ void reconfigure() {
     popapi::Options o;
     o.screenWidth = g_logicalWidth;
     o.interpolation = g_settings.interpolation;
+    o.inputBuffer = g_settings.inputBuffer;
     popapi::configure(o);
 }
 
@@ -1098,6 +1147,7 @@ int WINAPI wWinMain(HINSTANCE instance, HINSTANCE, PWSTR, int show) {
     popapi::Options options;
     options.screenWidth = g_logicalWidth;
     options.interpolation = g_settings.interpolation;
+    options.inputBuffer = g_settings.inputBuffer;
     options.optionsMenu = !noOptionsMenu;
     popapi::configure(options);
     LARGE_INTEGER seed;

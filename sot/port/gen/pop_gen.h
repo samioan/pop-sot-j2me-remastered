@@ -20,6 +20,11 @@ struct PortConfig : Object {
    static inline jint screenWidth{};
    static inline jboolean directTiles{};
    static inline jboolean desktop{};
+   static inline jboolean inputBuffer{};
+   static inline jint BUFFER_TICKS{};
+   static inline Arr<jint> bufferAge{};
+   static inline Arr<jboolean> bufferSeen{};
+   static inline jint bufferState{};
    PortConfig();
    static void desktopMenus();
    static jint view();
@@ -32,6 +37,7 @@ struct PortConfig : Object {
    static jint settingsCount();
    static Ref<String> settingsLabel(Arr<Ref<String>> labels, jint i);
    static jint settingsAction(jint row);
+   static void inputTick();
    static void hud();
    static void actor(Ref<Actor> a);
    static void clinit();

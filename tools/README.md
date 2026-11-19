@@ -53,4 +53,4 @@ preloads the same save (every level done) on both sides and starts from the Leve
 
 `pop_sot_check.exe` options: `--data DIR --ticks N --script FILE --trace FILE --width W
 --options-menu --shot TICK FILE --mid-shot TICK FILE --verify-replay --describe --dump TICK FILE
---save-in FILE --save-out FILE --font-metrics FILE --trace-throws N`.
+--save-in FILE --save-out FILE --font-metrics FILE --trace-throws N --input-buffer --describe-every N`.

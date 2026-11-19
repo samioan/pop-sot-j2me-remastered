@@ -53,6 +53,7 @@ void configure(const Options& options) {
     const bool widthChanged = g_started && PortConfig::screenWidth != options.screenWidth;
     PortConfig::screenWidth = options.screenWidth;
     PortConfig::directTiles = options.interpolation;
+    PortConfig::inputBuffer = options.inputBuffer;
     if (widthChanged) PortConfig::widthChanged();
 #endif
     if (!options.interpolation) recorderDrop();
@@ -89,6 +90,7 @@ void start(std::int64_t, bool) {
     PortConfig::clinit();
     PortConfig::screenWidth = g_options.screenWidth;
     PortConfig::directTiles = g_options.interpolation;
+    PortConfig::inputBuffer = g_options.inputBuffer;
 #endif
     // The JVM initializes a class on first use: the canvas (Game) when startApp creates it, the
     // others while Game.i loads; none of these static initializers reads another class's statics.
@@ -254,8 +256,8 @@ void dumpState(std::vector<std::string>& lines) {
 
 std::string describeState() {
     if (!g_started) return "not started";
-    std::string s = "aw=" + std::to_string(Game::aw) + " level=" + std::to_string(Game::au) + " camera=" + std::to_string(Level::d) + "," + std::to_string(Level::l);
-    if (Level::i != nullptr) s += " prince=" + std::to_string(Level::i->e) + "," + std::to_string(Level::i->M);
+    std::string s = "aw=" + std::to_string(Game::aw) + " av=" + std::to_string(Game::av) + " level=" + std::to_string(Game::au) + " camera=" + std::to_string(Level::d) + "," + std::to_string(Level::l);
+    if (Level::i != nullptr) s += " prince=" + std::to_string(Level::i->e) + "," + std::to_string(Level::i->M) + " state=" + std::to_string(Level::i->z);
     return s;
 }
 

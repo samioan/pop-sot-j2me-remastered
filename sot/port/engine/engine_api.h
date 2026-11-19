@@ -26,6 +26,7 @@ struct Options {
     int screenWidth = kBaseWidth; // logical width; height is always kBaseHeight
     bool interpolation = false; // record draw calls so renderInterpolated can present between ticks
     bool optionsMenu = false;   // add the OPTIONS entry to the game's menus (set before start)
+    bool inputBuffer = false;   // PC input buffer (PortConfig.inputTick): changes play, so off for the checker
 };
 
 void configure(const Options& options);

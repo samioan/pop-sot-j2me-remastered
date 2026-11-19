@@ -8,6 +8,10 @@ void PortConfig::clinit() {
    PortConfig::HEIGHT = 208;
    PortConfig::MAX = 486;
    PortConfig::screenWidth = 176;
+   PortConfig::BUFFER_TICKS = 3;
+   PortConfig::bufferAge = jnewarray<Arr<jint>>(2);
+   PortConfig::bufferSeen = jnewarray<Arr<jboolean>>(2);
+   PortConfig::bufferState = -1;
 }
 
 PortConfig::PortConfig() {
@@ -85,6 +89,47 @@ jint PortConfig::settingsAction(jint row) {
    return ((row == 3) ? 99 : 3);
 }
 
+void PortConfig::inputTick() {
+   if (((!PortConfig::inputBuffer))) {
+      return;
+   }
+   Ref<Prince> p = Level::i;
+   jboolean playing = (((Game::aw == 0) && (Game::av < 0)) && (p != nullptr));
+   jint before = PortConfig::bufferState;
+   jint now = (playing ? (p)->z : -1);
+   (PortConfig::bufferState = now);
+   {
+      jint n = 0;
+      for (; (n < 2); (n++)) {
+         jint k = ((n == 0) ? 0 : 4);
+         if (((((!playing) || ((Game::ay)[k] < 1)) || ((Game::ax)[k] != 0)))) {
+            ((PortConfig::bufferAge)[n] = 0);
+            continue;
+         }
+         if ((((PortConfig::bufferAge)[n] == 0))) {
+            if ((((Game::ay)[k] != 1))) {
+               continue;
+            }
+            ((PortConfig::bufferAge)[n] = 1);
+            ((PortConfig::bufferSeen)[n] = ((before == 0) || ((n == 0) && (before == 1))));
+         } else {
+            ((PortConfig::bufferAge)[n]++);
+         }
+         jboolean reads = ((now == 0) || ((n == 0) && (now == 1)));
+         if (((!reads))) {
+            if (((PortConfig::bufferSeen)[n])) {
+               ((PortConfig::bufferAge)[n] = 0);
+            }
+         } else if ((((PortConfig::bufferAge)[n] <= 3))) {
+            ((Game::ax)[k] = 1);
+            ((PortConfig::bufferSeen)[n] = true);
+         } else {
+            ((PortConfig::bufferAge)[n] = 0);
+         }
+      }
+   }
+}
+
 void PortConfig::hud() {
    if ((PortConfig::directTiles)) {
       PortNative::layerScreen();
@@ -104,6 +149,11 @@ void PortConfig::portDumpStatics(StateSink& sink) {
    sink.put("screenWidth", PortConfig::screenWidth);
    sink.put("directTiles", PortConfig::directTiles);
    sink.put("desktop", PortConfig::desktop);
+   sink.put("inputBuffer", PortConfig::inputBuffer);
+   sink.put("BUFFER_TICKS", PortConfig::BUFFER_TICKS);
+   sink.put("bufferAge", PortConfig::bufferAge);
+   sink.put("bufferSeen", PortConfig::bufferSeen);
+   sink.put("bufferState", PortConfig::bufferState);
 }
 
 void PortConfig::portDumpFields(StateSink& sink) {

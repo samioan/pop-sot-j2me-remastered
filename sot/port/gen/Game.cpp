@@ -159,6 +159,7 @@ void Game::m_a_Z(jboolean var1) {
 }
 
 void Game::m_e_V() {
+   PortConfig::inputTick();
    (Game::a++);
    {
       jint var0 = 0;

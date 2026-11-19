@@ -32,6 +32,8 @@ PORT_PATCHES: list[tuple[str, str, str, int]] = [
     ("Level.java", "         if (var2 != null && var2.H[3]) {\n            var2.c(d, l - 0);\n",
      "         if (var2 != null && var2.H[3]) {\n            PortConfig.actor(var2);\n            var2.c(d, l - 0);\n", 1),
     # tile scroll buffer: wide enough for the widest view; columns and blits cover the view
+    # PC input buffer: a jump or sword press still held is offered again before it latches into a hold
+    ("Game.java", "   static void e() {\n      a++;\n", "   static void e() {\n      PortConfig.inputTick();\n      a++;\n", 1),
     ("Game.java", "               am = 176 + W * 2 & ~(W - 1);\n", "               am = PortConfig.bufferWidth() + W * 2 & ~(W - 1);\n", 1),
     ("Game.java", "      int var5 = var3 + 176 / W + 1;\n", f"      int var5 = var3 + {V} / W + 1;\n", 1),
     ("Game.java", "      int var10 = (var1 + 176) % am;\n", f"      int var10 = (var1 + {V}) % am;\n", 1),

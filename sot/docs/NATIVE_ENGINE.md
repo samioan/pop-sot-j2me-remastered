@@ -88,7 +88,21 @@ tick's frame exactly (verified at 176 and 370).
 ### Input, saves, data
 
 Keyboard and XInput gamepad map to the phone keys by context (`popapi::inputContext`): jump is Up
-in play and Select in menus. The phone keypad (digits, numpad) keeps working. The save is the
+in play and Select in menus. The phone keypad (digits, numpad) keeps working.
+
+The game serves one key per tick in a fixed order (standing: Down, Left/Right, Up, FIRE) and acts
+on a jump or sword press only on the tick it arrives. The host leaves that alone and smooths what
+it sends: of two opposite directions the newest wins (the older is released to the game and
+pressed again if still held when the newer ends), and the stick has a radial deadzone with
+hysteresis (engage at the deadzone, let go at 60% of it; a flickering stick otherwise double-taps
+into the sand dash) and a wider Left/Right sector (Up/Down from 40 degrees above horizontal, held
+down to 30). The INPUT BUFFER option (on by default, keyboard page; `input_buffer` in the ini)
+runs `PortConfig.inputTick` at the start of `Game.e()`: a jump or sword press still held that has
+not started a move is queued again in `Game.ax` for up to 3 ticks while the prince stands (or, for
+jump, runs), so Right+Up from standing is a running jump and a jump held through a landing
+happens on landing. Off, and in `pop_sot_check` without `--input-buffer`, nothing changes.
+
+The save is the
 original `POP2RECORD` store in `%LOCALAPPDATA%\PrinceOfPersiaSoT`. Game data is read from the
 user's JAR (SHA-256 checked, other builds with the same layout offered with a warning).
 

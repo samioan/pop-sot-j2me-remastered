@@ -114,6 +114,65 @@ final class PortConfig {
       return row == 3 ? 99 : 3;
    }
 
+   /**
+    * Input buffer (PC option, off unless the host turns it on). The game acts on a jump (Up) or
+    * sword (FIRE) press only on the tick it arrives, and when standing it serves Left/Right before Up,
+    * so a press made while landing, or together with a direction, is lost. While the key is still
+    * held, a press that has not yet started a move is offered again for up to BUFFER_TICKS ticks,
+    * only while the prince stands (state 0) or runs (state 1, Up only); a press that moved him out of
+    * those states is spent. Runs at the start of Game.e(), before presses are latched into holds:
+    * offering again queues the press in ax, as Game.keyPressed does for a press inside a tick.
+    */
+   static boolean inputBuffer;
+   static final int BUFFER_TICKS = 3;
+   /** Per buffered key (0 Up, 1 FIRE): ticks since the press (0 none), and whether it met a state that reads it. */
+   static int[] bufferAge = new int[2];
+   static boolean[] bufferSeen = new boolean[2];
+   static int bufferState = -1;
+
+   static void inputTick() {
+      if (!inputBuffer) {
+         return;
+      }
+
+      Prince p = Level.i;
+      boolean playing = Game.aw == 0 && Game.av < 0 && p != null;
+      int before = bufferState;
+      int now = playing ? p.z : -1;
+      bufferState = now;
+
+      for (int n = 0; n < 2; n++) {
+         int k = n == 0 ? 0 : 4;
+         if (!playing || Game.ay[k] < 1 || Game.ax[k] != 0) {
+            bufferAge[n] = 0;
+            continue;
+         }
+
+         if (bufferAge[n] == 0) {
+            if (Game.ay[k] != 1) {
+               continue;
+            }
+
+            bufferAge[n] = 1;
+            bufferSeen[n] = before == 0 || n == 0 && before == 1;
+         } else {
+            bufferAge[n]++;
+         }
+
+         boolean reads = now == 0 || n == 0 && now == 1;
+         if (!reads) {
+            if (bufferSeen[n]) {
+               bufferAge[n] = 0;
+            }
+         } else if (bufferAge[n] <= BUFFER_TICKS) {
+            Game.ax[k] = 1;
+            bufferSeen[n] = true;
+         } else {
+            bufferAge[n] = 0;
+         }
+      }
+   }
+
    /** The health and sand bars: drawn in place, not moved with an actor between ticks. */
    static void hud() {
       if (directTiles) {

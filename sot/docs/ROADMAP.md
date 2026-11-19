@@ -29,7 +29,9 @@ The current remaining-work list. Update it in place when work lands.
   clips; replay at alpha 1 verified at 176 and 370.
 - [x] Keyboard and XInput gamepad with context mapping; PC options screen in the game's Settings
   menu (main and in-game); system font rendering through GDI.
-- [x] Launcher (`PrinceOfPersiaSoT.exe`) with original generated artwork, JAR check and install,
+- [x] Smoother input: newest of opposite directions wins, stick hysteresis and wider horizontal
+  sector, optional input buffer for held jump/sword presses (scripted checks, no playtest yet).
+- [x] Launcher (`PrinceOfPersiaSoT.exe`) with the Remastered key art (tools/make_art.py), JAR check and install,
   window size or fullscreen, self-update from GitHub releases; data-free CI and package check.
 
 ## Remaining

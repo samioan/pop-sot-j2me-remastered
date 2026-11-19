@@ -36,7 +36,8 @@ Open Settings > PC options in the game's main menu or in-game menu:
   Display   width (auto, 176 original, 278, 333, 370, 486), frame rate,
             smooth motion, fullscreen, scaling, fps counter, pause in background
   Audio     volume, mute
-  Keyboard  select an action, press Enter, then the new key
+  Keyboard  select an action, press Enter, then the new key; input buffer
+            (a jump or sword press held while the prince is busy still counts)
   Gamepad   select an action, press Enter, then the new button
 In that screen Up/Down choose, Left/Right change a value, Enter activates,
 Esc goes back.

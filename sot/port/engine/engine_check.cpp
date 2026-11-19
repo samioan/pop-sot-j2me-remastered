@@ -3,6 +3,7 @@
 // (tools/reference_checks/EngineOracle.java).
 #include "engine_api.h"
 #include "host_util.h"
+#include <algorithm>
 #include <cstdio>
 #include <cstdlib>
 #include <cstring>
@@ -109,7 +110,8 @@ int main(int argc, char** argv) {
     long long seed = 12345;
     std::string script, trace, dumpPath, fontsPath;
     std::multimap<int, std::string> shots;
-    bool describe = false, interpolation = false, verifyReplay = false, optionsMenu = false;
+    int describeEvery = 50;
+    bool describe = false, interpolation = false, verifyReplay = false, optionsMenu = false, inputBuffer = false;
     std::multimap<int, std::string> midShots;
     long long replayChecked = 0, replayMismatch = 0, replayFrames = 0;
     for (int i = 1; i < argc; ++i) {
@@ -126,6 +128,7 @@ int main(int argc, char** argv) {
         else if (a == "--save-in") g_saveIn = next();
         else if (a == "--save-out") g_saveOut = next();
         else if (a == "--describe") describe = true;
+        else if (a == "--describe-every") { describe = true; describeEvery = (std::max)(1, std::atoi(next().c_str())); }
 #ifdef _WIN32
         else if (a == "--trace-throws") { g_traceBudget = std::atoi(next().c_str()); pop::g_throwHook = traceThrow; }
 #endif
@@ -135,6 +138,7 @@ int main(int argc, char** argv) {
         else if (a == "--quiet") g_quiet = true;
         else if (a == "--font-metrics") fontsPath = next(); // for the oracle's Font
         else if (a == "--options-menu") optionsMenu = true; // the desktop configuration: OPTIONS entry and desktopFixes
+        else if (a == "--input-buffer") inputBuffer = true; // the PC input buffer (changes play; not for the oracle)
         else { std::fprintf(stderr, "unknown option %s\n", a.c_str()); return 2; }
     }
     if (!g_saveIn.empty()) {
@@ -159,6 +163,7 @@ int main(int argc, char** argv) {
     options.screenWidth = width;
     options.interpolation = interpolation;
     options.optionsMenu = optionsMenu;
+    options.inputBuffer = inputBuffer;
     popapi::configure(options);
     popapi::start(seed, true);
     if (!fontsPath.empty()) {
@@ -201,7 +206,7 @@ int main(int argc, char** argv) {
             if (popapi::renderInterpolated(0.5)) writePpm(it->second);
         auto shotRange = shots.equal_range(t);
         for (auto it = shotRange.first; it != shotRange.second; ++it) writePpm(it->second);
-        if (describe && (t % 50 == 0 || t == ticks - 1)) std::printf("%d %s\n", t, popapi::describeState().c_str());
+        if (describe && (t % describeEvery == 0 || t == ticks - 1)) std::printf("%d %s\n", t, popapi::describeState().c_str());
     }
     if (verifyReplay) {
         std::printf("replay: %lld world ticks reproduced exactly at alpha 1, %lld mismatches, %lld in-between frames\n",
