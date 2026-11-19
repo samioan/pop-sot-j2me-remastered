@@ -85,6 +85,12 @@ jint PortConfig::settingsAction(jint row) {
    return ((row == 3) ? 99 : 3);
 }
 
+void PortConfig::hud() {
+   if ((PortConfig::directTiles)) {
+      PortNative::layerScreen();
+   }
+}
+
 void PortConfig::actor(Ref<Actor> a) {
    if ((PortConfig::directTiles)) {
       PortNative::layerActor(a, jsub32((jshr32((jint)((a)->e), (jint)(8))), Level::d), jsub32((jshr32((jint)((a)->M), (jint)(8))), Level::l));

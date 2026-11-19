@@ -1,11 +1,11 @@
 #include "resource.h"
 
-// The banner artwork, made from assets/banner_source.jpg by
-// tools/make_banner.py and decoded at startup through WIC (see banner.h).
+// The banner artwork, made by tools/make_art.py and decoded at startup
+// through WIC (see banner.h).
 IDR_BANNER RCDATA "assets/banner.jpg"
 
 // The taskbar/Explorer icon: the hero's face cropped out of the same artwork
-// by tools/make_icon.py. The lowest-numbered icon resource is the one
+// by tools/make_art.py. The lowest-numbered icon resource is the one
 // Explorer shows for the file, and IDI_APPICON is the only one here.
 IDI_APPICON ICON "assets/pop_sot.ico"
 

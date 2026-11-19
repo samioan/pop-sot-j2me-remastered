@@ -25,9 +25,10 @@ PORT_PATCHES: list[tuple[str, str, str, int]] = [
      f"      if (d > Game.q[var3] * Game.W - {V}) {{\n         d = Game.q[var3] * Game.W - {V};\n", 1),
     # actors in a region are active while the region overlaps the view
     ("Level.java", "? var1 + 176 >= r[var4][var3][0]", f"? var1 + {V} >= r[var4][var3][0]", 1),
-    # actor layer clip after drawing actors; layer markers for interpolation
+    # actor layer clip after drawing actors; layer markers for interpolation (the health and sand
+    # bars drawn by e() are interface: a screen layer, never shifted between ticks)
     ("Level.java", "      Game.aE.setClip(0, 0, 176, 208);\n      Game.aE.clipRect(0, 0, 176, 208);\n      if (i != null && k) {\n",
-     f"      Game.aE.setClip(0, 0, {V}, 208);\n      Game.aE.clipRect(0, 0, {V}, 208);\n      if (i != null && k) {{\n         PortConfig.actor(i);\n", 1),
+     f"      Game.aE.setClip(0, 0, {V}, 208);\n      Game.aE.clipRect(0, 0, {V}, 208);\n      if (i != null && k) {{\n         PortConfig.hud();\n", 1),
     ("Level.java", "         if (var2 != null && var2.H[3]) {\n            var2.c(d, l - 0);\n",
      "         if (var2 != null && var2.H[3]) {\n            PortConfig.actor(var2);\n            var2.c(d, l - 0);\n", 1),
     # tile scroll buffer: wide enough for the widest view; columns and blits cover the view

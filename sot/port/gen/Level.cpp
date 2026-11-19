@@ -206,7 +206,7 @@ void Level::m_b_V() {
    ([&]{ auto _t0 = Game::aE; auto _t1 = 0; auto _t2 = 0; auto _t3 = PortConfig::view(); auto _t4 = 208; return _t0->setClip(_t1, _t2, _t3, _t4); }());
    ([&]{ auto _t5 = Game::aE; auto _t6 = 0; auto _t7 = 0; auto _t8 = PortConfig::view(); auto _t9 = 208; return _t5->clipRect(_t6, _t7, _t8, _t9); }());
    if ((((Level::i != nullptr) && Level::k))) {
-      PortConfig::actor(Level::i);
+      PortConfig::hud();
       this->m_e_V();
    }
 }

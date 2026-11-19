@@ -32,6 +32,7 @@ struct PortConfig : Object {
    static jint settingsCount();
    static Ref<String> settingsLabel(Arr<Ref<String>> labels, jint i);
    static jint settingsAction(jint row);
+   static void hud();
    static void actor(Ref<Actor> a);
    static void clinit();
    static void portDumpStatics(StateSink& sink);

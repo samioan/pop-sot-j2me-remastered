@@ -114,6 +114,13 @@ final class PortConfig {
       return row == 3 ? 99 : 3;
    }
 
+   /** The health and sand bars: drawn in place, not moved with an actor between ticks. */
+   static void hud() {
+      if (directTiles) {
+         PortNative.layerScreen();
+      }
+   }
+
    static void actor(Actor a) {
       if (directTiles) {
          PortNative.layerActor(a, (a.e >> 8) - Level.d, (a.M >> 8) - Level.l);

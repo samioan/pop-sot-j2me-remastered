@@ -8,6 +8,12 @@ skyline are this script's own, and the title is set in a system font.
 
     python tools/make_art.py            # writes sot/port/launcher/assets/banner.jpg and pop_sot.ico
 
+With --image PATH the banner is that picture instead (scaled and centre-cropped to W x H) and the
+icon is the square --face X,Y,SIZE cut out of it (source pixels). The shipped launcher art is the
+"Prince of Persia: Remastered" key art the project owner supplied:
+
+    python tools/make_art.py --image "Prince of Persia_ Remastered.png" --face 605,262,200
+
 Needs Pillow (pip install pillow).
 """
 import math
@@ -157,12 +163,20 @@ def hourglass(size, style):
     return img.resize((size, size), Image.LANCZOS)
 
 
-def ico(style, path):
+def fit(img, w, h):
+    """Scale img to cover w x h and crop the overflow evenly."""
+    scale = max(w / img.width, h / img.height)
+    img = img.resize((max(w, round(img.width * scale)), max(h, round(img.height * scale))), Image.LANCZOS)
+    x, y = (img.width - w) // 2, (img.height - h) // 2
+    return img.crop((x, y, x + w, y + h))
+
+
+def ico(style, path, face=None):
     sizes = [16, 24, 32, 48, 64, 128, 256]
     pngs = []
     for z in sizes:
         buf = io.BytesIO()
-        hourglass(z, style).save(buf, "PNG")
+        (face.resize((z, z), Image.LANCZOS) if face else hourglass(z, style)).save(buf, "PNG")
         pngs.append(buf.getvalue())
     out = bytearray(struct.pack("<HHH", 0, 1, len(sizes)))
     offset = 6 + 16 * len(sizes)
@@ -175,9 +189,23 @@ def ico(style, path):
 
 
 def main():
+    import argparse
+    ap = argparse.ArgumentParser(description=__doc__.splitlines()[0])
+    ap.add_argument("--image", type=Path, help="use this picture for the banner instead of drawing one")
+    ap.add_argument("--face", default=None, help="X,Y,SIZE: the square of --image cut out for the icon")
+    args = ap.parse_args()
     ASSETS.mkdir(parents=True, exist_ok=True)
-    banner(STYLE).save(ASSETS / "banner.jpg", quality=90)
-    ico(STYLE, ASSETS / "pop_sot.ico")
+    if args.image:
+        src = Image.open(args.image).convert("RGB")
+        fit(src, W, H).save(ASSETS / "banner.jpg", quality=90)
+        face = None
+        if args.face:
+            x, y, z = (int(v) for v in args.face.split(","))
+            face = src.crop((x, y, x + z, y + z)).convert("RGBA")
+        ico(STYLE, ASSETS / "pop_sot.ico", face)
+    else:
+        banner(STYLE).save(ASSETS / "banner.jpg", quality=90)
+        ico(STYLE, ASSETS / "pop_sot.ico")
     print("wrote", ASSETS / "banner.jpg", "and", ASSETS / "pop_sot.ico")
 
 
